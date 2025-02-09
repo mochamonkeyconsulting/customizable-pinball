@@ -38,32 +38,19 @@ Example.manipulation = function() {
     Runner.run(runner, engine);
 
     // add bodies
-    var bodyA = Bodies.rectangle(100, 300, 50, 50, { isStatic: true, render: { fillStyle: '#060a19' } }),
-        bodyB = Bodies.rectangle(200, 200, 50, 50),
-        bodyLeftBase = Bodies.rectangle(200, 600, 200, 100, { isStatic: true, render: { fillStyle: '#060a19' } }),
-        bodyD = Bodies.rectangle(400, 200, 50, 50),
-        bodyE = Bodies.rectangle(550, 200, 50, 50),
-        bodyF = Bodies.rectangle(700, 200, 50, 50),
+    var bodyLeftBase = Bodies.rectangle(200, 600, 200, 100, { isStatic: true, render: { fillStyle: '#060a19' } }),
         ballyBoi = Bodies.circle(400, 100, 20, { render: { fillStyle: '#060a19' } });
 
-    // add compound body
-    var partA = Bodies.rectangle(600, 200, 120 * 0.8, 50 * 0.8, { render: { fillStyle: '#060a19' } }),
-        partB = Bodies.rectangle(660, 200, 50 * 0.8, 190 * 0.8, { render: { fillStyle: '#060a19' } }),
-        compound = Body.create({
-            parts: [partA, partB],
-            isStatic: true
-        });
 
-    Body.setPosition(compound, { x: 600, y: 300 });
-
-    Composite.add(world, [bodyA, bodyB, bodyLeftBase, bodyD, bodyE, bodyF, ballyBoi, compound]);
+    Composite.add(world, [bodyLeftBase, ballyBoi]);
 
     Composite.add(world, [
         // walls
-        Bodies.rectangle(400, -300, 800, 50, { isStatic: true }),
-        Bodies.rectangle(400, 900, 800, 50, { isStatic: true }),
-        Bodies.rectangle(800, 300, 50, 1200, { isStatic: true }),
-        Bodies.rectangle(0, 300, 50, 1200, { isStatic: true })
+        Bodies.rectangle(400, -300, 800, 50, { isStatic: true }), // top
+        Bodies.rectangle(400, 800, 800, 50, { angle: .1, isStatic: true }), //bottom
+        Bodies.rectangle(675, 300, 50, 800, { isStatic: true }), // left left
+        Bodies.rectangle(800, 300, 50, 1200, { isStatic: true }), //left right
+        Bodies.rectangle(0, 300, 50, 1200, { isStatic: true }) //right
     ]);
 
 
@@ -138,39 +125,8 @@ Example.manipulation = function() {
     Events.on(engine, 'beforeUpdate', function(event) {
         var timeScale = (event.delta || (1000 / 60)) / 1000;
 
-        if (scaleRate > 0) {
-            // Body.scale(bodyF, 1 + (scaleRate * timeScale), 1 + (scaleRate * timeScale));
-
-            // modify bodyE vertices
-            bodyE.vertices[0].x -= 0.2 * timeScale;
-            bodyE.vertices[0].y -= 0.2 * timeScale;
-            bodyE.vertices[1].x += 0.2 * timeScale;
-            bodyE.vertices[1].y -= 0.2 * timeScale;
-            Body.setVertices(bodyE, bodyE.vertices);
-        }
-
-        // make bodyA move up and down
+        // cyclic motion move up and down
         var py = 300 + 100 * Math.sin(engine.timing.timestamp * 0.002);
-
-        // manual update velocity required for older releases
-        if (Matter.version === '0.18.0') {
-            Body.setVelocity(bodyA, { x: 0, y: py - bodyA.position.y });
-            Body.setVelocity(compound, { x: 0, y: py - compound.position.y });
-            Body.setAngularVelocity(compound, 1 * Math.PI * timeScale);
-        }
-
-        // move body and update velocity
-        Body.setPosition(bodyA, { x: 100, y: py }, true);
-
-        // move compound body move up and down and update velocity
-        Body.setPosition(compound, { x: 600, y: py }, true);
-
-        // rotate compound body and update angular velocity
-        Body.rotate(compound, 1 * Math.PI * timeScale, null, true);
-
-        // after first 0.8 sec (simulation time)
-        if (engine.timing.timestamp >= 800)
-            Body.setStatic(bodyF, true);
 
         // build up pressure
         if(downPressed==true){
@@ -199,18 +155,6 @@ Example.manipulation = function() {
 
         
 
-        // every 1.5 sec (simulation time)
-        if (engine.timing.timestamp - lastTime >= 1500) {
-            Body.setVelocity(bodyB, { x: 0, y: -10 });
-            // Body.setAngle(bodyLeftBase, -Math.PI * 0.26);
-            Body.setAngularVelocity(bodyD, 0.2);
-
-            // stop scaling
-            scaleRate = 0;
-            
-            // update last time
-            lastTime = engine.timing.timestamp;
-        }
     });
 
     // add mouse control
