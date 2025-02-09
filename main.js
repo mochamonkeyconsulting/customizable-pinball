@@ -40,11 +40,11 @@ Example.manipulation = function() {
     // add bodies
     var bodyA = Bodies.rectangle(100, 300, 50, 50, { isStatic: true, render: { fillStyle: '#060a19' } }),
         bodyB = Bodies.rectangle(200, 200, 50, 50),
-        bodyC = Bodies.rectangle(250, 600, 200, 100, { isStatic: true, render: { fillStyle: '#060a19' } }),
+        bodyLeftBase = Bodies.rectangle(200, 600, 200, 100, { isStatic: true, render: { fillStyle: '#060a19' } }),
         bodyD = Bodies.rectangle(400, 200, 50, 50),
         bodyE = Bodies.rectangle(550, 200, 50, 50),
         bodyF = Bodies.rectangle(700, 200, 50, 50),
-        bodyG = Bodies.circle(400, 100, 20, { render: { fillStyle: '#060a19' } });
+        ballyBoi = Bodies.circle(400, 100, 20, { render: { fillStyle: '#060a19' } });
 
     // add compound body
     var partA = Bodies.rectangle(600, 200, 120 * 0.8, 50 * 0.8, { render: { fillStyle: '#060a19' } }),
@@ -56,7 +56,7 @@ Example.manipulation = function() {
 
     Body.setPosition(compound, { x: 600, y: 300 });
 
-    Composite.add(world, [bodyA, bodyB, bodyC, bodyD, bodyE, bodyF, bodyG, compound]);
+    Composite.add(world, [bodyA, bodyB, bodyLeftBase, bodyD, bodyE, bodyF, ballyBoi, compound]);
 
     Composite.add(world, [
         // walls
@@ -180,15 +180,15 @@ Example.manipulation = function() {
         // shoot up
         if(downPressed==false && releasePressure>0){
             
-            Body.setVelocity(bodyG, { x: 0, y: -releasePressure});
+            Body.setVelocity(ballyBoi, { x: 0, y: -releasePressure});
             releasePressure = 0;
         }
         
         if(upPressed==true){
-            Body.setPosition(bodyG, { x: 325, y: -100 }, true);
+            Body.setPosition(ballyBoi, { x: 325, y: -100 }, true);
             
-            // Body.setVelocity(bodyG, { x: Math.floor(Math.random() * 10)-5, y: Math.floor(Math.random() * 10)-5 });
-            Body.setVelocity(bodyG, { x: 0, y: 0 });
+            // Body.setVelocity(ballyBoi, { x: Math.floor(Math.random() * 10)-5, y: Math.floor(Math.random() * 10)-5 });
+            Body.setVelocity(ballyBoi, { x: 0, y: 0 });
         }
 
         if(leftPressed==true){
@@ -202,7 +202,7 @@ Example.manipulation = function() {
         // every 1.5 sec (simulation time)
         if (engine.timing.timestamp - lastTime >= 1500) {
             Body.setVelocity(bodyB, { x: 0, y: -10 });
-            // Body.setAngle(bodyC, -Math.PI * 0.26);
+            // Body.setAngle(bodyLeftBase, -Math.PI * 0.26);
             Body.setAngularVelocity(bodyD, 0.2);
 
             // stop scaling
