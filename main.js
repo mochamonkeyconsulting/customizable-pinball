@@ -39,29 +39,32 @@ Example.manipulation = function() {
 
     // add bodies
     var bodyLeftBase = Bodies.rectangle(200, 600, 200, 100, { isStatic: true, render: { fillStyle: '#060a19' } }),
-        ballyBoi = Bodies.circle(400, 100, 20, { render: { fillStyle: '#060a19' } });
+        bodyRightBase = Bodies.rectangle(600, 600, 200, 100, { isStatic: true, render: { fillStyle: '#060a19' } }),
+        ballyBoi = Bodies.circle(400, 100, 20, { friction: 0, render: { fillStyle: '#060a19' } });
 
 
-    Composite.add(world, [bodyLeftBase, ballyBoi]);
+    Composite.add(world, [bodyLeftBase, bodyRightBase, ballyBoi]);
 
     Composite.add(world, [
         // walls
         Bodies.rectangle(400, -300, 800, 50, { isStatic: true }), // top
         Bodies.rectangle(400, 800, 800, 50, { angle: .1, isStatic: true }), //bottom
-        Bodies.rectangle(675, 300, 50, 800, { isStatic: true }), // left left
-        Bodies.rectangle(800, 300, 50, 1200, { isStatic: true }), //left right
-        Bodies.rectangle(0, 300, 50, 1200, { isStatic: true }) //right
+        Bodies.rectangle(675, 300, 50, 800, { isStatic: true }), // right left
+        Bodies.rectangle(800, 300, 50, 1200, { isStatic: true }), //right right
+        Bodies.rectangle(0, 300, 50, 1200, { isStatic: true }), //left
+        Bodies.rectangle(165, 300, 50, 1200, { isStatic: true }), //left
+        Bodies.rectangle(725, -230, 50, 200, { angle: -.9, isStatic: true }) // bumper thing at top
     ]);
 
 
-    // add bodies
-    var group = Body.nextGroup(true),
+    // LEFT FLAPPER
+    var groupLeft = Body.nextGroup(true),
         length = 150,
         width = 25;
 
     var leftFlapper = Composites.stack(200, 500, 1, 1, -20, 0, function(x, y) {
         return Bodies.rectangle(x, y, length, width, { 
-            collisionFilter: { group: group },
+            collisionFilter: { group: groupLeft },
             frictionAir: 0,
             chamfer: 5,
             render: {
@@ -70,7 +73,6 @@ Example.manipulation = function() {
             }
         });
     });
-
     Composite.add(leftFlapper, Constraint.create({ 
         bodyB: leftFlapper.bodies[0],
         pointB: { x: -length * 0.42, y: 0 },
@@ -81,9 +83,36 @@ Example.manipulation = function() {
             strokeStyle: '#4a485b'
         }
     }));
-
-    
     Composite.add(world, leftFlapper);
+
+
+    // RIGHT FLAPPER
+        var groupRight = Body.nextGroup(true),
+        length = 150,
+        width = 25;
+
+    var rightFlapper = Composites.stack(575, 500, 1, 1, -20, 0, function(x, y) {
+        return Bodies.rectangle(x, y, length, width, { 
+            collisionFilter: { group: groupRight },
+            frictionAir: 0,
+            chamfer: 5,
+            render: {
+                fillStyle: 'blue',
+                lineWidth: 1
+            }
+        });
+    });
+    Composite.add(rightFlapper, Constraint.create({ 
+        bodyB: rightFlapper.bodies[0],
+        pointB: { x: -length * 0.42, y: 0 },
+        pointA: { x: rightFlapper.bodies[0].position.x - length * 0.42, y: rightFlapper.bodies[0].position.y },
+        stiffness: 0.9,
+        length: 0,
+        render: {
+            strokeStyle: '#4a485b'
+        }
+    }));
+    Composite.add(world, rightFlapper);
 
 
 
@@ -151,6 +180,13 @@ Example.manipulation = function() {
             
             Body.setVelocity(Composite.allBodies(leftFlapper)[0], { x: 10, y: -40 });
         }
+
+        
+        if(rightPressed==true){
+            
+            Body.setVelocity(Composite.allBodies(rightFlapper)[0], { x: -10, y: -40 });
+        }
+
 
 
         
