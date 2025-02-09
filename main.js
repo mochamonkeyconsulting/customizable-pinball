@@ -65,7 +65,7 @@ Example.manipulation = function() {
     // add bodies
     var bodyLeftBase = Bodies.rectangle(200, 600, 200, 100, { isStatic: true, render: { fillStyle: '#060a19' } }),
         bodyRightBase = Bodies.rectangle(600, 600, 200, 100, { isStatic: true, render: { fillStyle: '#060a19' } }),
-        ballyBoi = Bodies.circle(400, 100, 20, { friction: 0, render: { fillStyle: '#060a19' } });
+        ballyBoi = Bodies.circle(400, 100, 15, { friction: 0, render: { fillStyle: '#060a19' } });
 
 
     Composite.add(world, [ ballyBoi]); // bodyLeftBase, bodyRightBase
@@ -101,6 +101,7 @@ Example.manipulation = function() {
             }
         });
     });
+    // Anchor
     Composite.add(leftFlapper, Constraint.create({ 
         bodyB: leftFlapper.bodies[0],
         pointB: { x: -length * 0.42, y: 0 },
@@ -111,15 +112,27 @@ Example.manipulation = function() {
             strokeStyle: '#4a485b'
         }
     }));
-    let leftConstraint = Constraint.create({ 
+    // FLAP_ON
+    let leftConstraintOn = Constraint.create({ 
         pointA: { x: leftFlapper.bodies[0].position.x + 0, y: leftFlapper.bodies[0].position.y - 100 },
         bodyB: leftFlapper.bodies[0],
         pointB: { x:  50, y: 0},
-        stiffness: .9,
-        length: 160,
-        damping: 1,
+        stiffness: 0,
+        length: 0,
+        damping: .5,
     })
-    Composite.add(leftFlapper, leftConstraint);
+    // FLAP_OFF
+    let leftConstraintOff = Constraint.create({ 
+        pointA: { x: leftFlapper.bodies[0].position.x + 0, y: leftFlapper.bodies[0].position.y + 100 },
+        bodyB: leftFlapper.bodies[0],
+        pointB: { x:  50, y: 0},
+        stiffness: 0,
+        length: 0,
+        damping: .5,
+    })
+
+    Composite.add(leftFlapper, leftConstraintOn);
+    Composite.add(leftFlapper, leftConstraintOff);
     Composite.add(world, leftFlapper);
 
 
@@ -223,11 +236,11 @@ Example.manipulation = function() {
         }
 
         if(leftPressed==true){
-            leftConstraint.length=0
-            leftConstraint.stiffness=.01
+            leftConstraintOn.stiffness=.01
+            leftConstraintOff.stiffness=0
         }else{
-            leftConstraint.length=150
-            leftConstraint.stiffness=.1
+            leftConstraintOn.stiffness=0
+            leftConstraintOff.stiffness=.01
         }
 
         
