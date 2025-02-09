@@ -1,18 +1,21 @@
 var Example = Example || {};
 
+
 Example.manipulation = function() {
     var Engine = Matter.Engine,
         Render = Matter.Render,
         Runner = Matter.Runner,
         Body = Matter.Body,
         Events = Matter.Events,
+        Constraint = Matter.Constraint,
         MouseConstraint = Matter.MouseConstraint,
         Mouse = Matter.Mouse,
         Composite = Matter.Composite,
+        Composites = Matter.Composites,
         Bodies = Matter.Bodies;
 
     // create engine
-    var engine = Engine.create(),
+    var engine = Engine.create({positionIterations: 26, velocityIterations: 20, gravity: { scale: .0005, y: 2}}),
         world = engine.world;
 
     // create renderer
@@ -20,8 +23,8 @@ Example.manipulation = function() {
         element: document.body,
         engine: engine,
         options: {
-            width: 1600,
-            height: 800,
+            width: 800,
+            height: 1200,
             showAxes: true,
             showCollisions: true,
             showConvexHulls: true
@@ -31,17 +34,17 @@ Example.manipulation = function() {
     Render.run(render);
 
     // create runner
-    var runner = Runner.create();
+    var runner = Runner.create({delta: 1000 / 600});
     Runner.run(runner, engine);
 
     // add bodies
     var bodyA = Bodies.rectangle(100, 300, 50, 50, { isStatic: true, render: { fillStyle: '#060a19' } }),
         bodyB = Bodies.rectangle(200, 200, 50, 50),
-        bodyC = Bodies.rectangle(300, 200, 50, 50),
+        bodyC = Bodies.rectangle(250, 600, 200, 100, { isStatic: true, render: { fillStyle: '#060a19' } }),
         bodyD = Bodies.rectangle(400, 200, 50, 50),
         bodyE = Bodies.rectangle(550, 200, 50, 50),
         bodyF = Bodies.rectangle(700, 200, 50, 50),
-        bodyG = Bodies.circle(400, 100, 25, { render: { fillStyle: '#060a19' } });
+        bodyG = Bodies.circle(400, 100, 20, { render: { fillStyle: '#060a19' } });
 
     // add compound body
     var partA = Bodies.rectangle(600, 200, 120 * 0.8, 50 * 0.8, { render: { fillStyle: '#060a19' } }),
@@ -57,20 +60,86 @@ Example.manipulation = function() {
 
     Composite.add(world, [
         // walls
-        Bodies.rectangle(400, 0, 800, 50, { isStatic: true }),
-        Bodies.rectangle(400, 600, 800, 50, { isStatic: true }),
-        Bodies.rectangle(800, 300, 50, 600, { isStatic: true }),
-        Bodies.rectangle(0, 300, 50, 600, { isStatic: true })
+        Bodies.rectangle(400, -300, 800, 50, { isStatic: true }),
+        Bodies.rectangle(400, 900, 800, 50, { isStatic: true }),
+        Bodies.rectangle(800, 300, 50, 1200, { isStatic: true }),
+        Bodies.rectangle(0, 300, 50, 1200, { isStatic: true })
     ]);
+
+
+    // add bodies
+    var group = Body.nextGroup(true),
+        length = 150,
+        width = 25;
+
+    var leftFlapper = Composites.stack(200, 500, 1, 1, -20, 0, function(x, y) {
+        return Bodies.rectangle(x, y, length, width, { 
+            collisionFilter: { group: group },
+            frictionAir: 0,
+            chamfer: 5,
+            render: {
+                fillStyle: 'blue',
+                lineWidth: 1
+            }
+        });
+    });
+
+    Composite.add(leftFlapper, Constraint.create({ 
+        bodyB: leftFlapper.bodies[0],
+        pointB: { x: -length * 0.42, y: 0 },
+        pointA: { x: leftFlapper.bodies[0].position.x - length * 0.42, y: leftFlapper.bodies[0].position.y },
+        stiffness: 0.9,
+        length: 0,
+        render: {
+            strokeStyle: '#4a485b'
+        }
+    }));
+
+    
+    Composite.add(world, leftFlapper);
+
+
+
+    // UPDATE
 
     var lastTime = 0,
         scaleRate = 0.6;
+
+    let leftPressed = false
+    let rightPressed = false
+    let upPressed = false
+    let downPressed = false
+    let releasePressure = 0
+    document.addEventListener('keydown', function(event) {
+        console.log("Key down", event.key)
+        if(event.key=="ArrowLeft"){
+            leftPressed = true
+        }else if(event.key=="ArrowRight"){
+            rightPressed = true
+        }else if(event.key=="ArrowUp"){
+            upPressed = true
+        }else if(event.key=="ArrowDown"){
+            downPressed = true
+        }
+    });
+    document.addEventListener('keyup', function(event) {
+        console.log("Key up", event.key)
+        if(event.key=="ArrowLeft"){
+            leftPressed = false
+        }else if(event.key=="ArrowRight"){
+            rightPressed = false
+        }else if(event.key=="ArrowUp"){
+            upPressed = false
+        }else if(event.key=="ArrowDown"){
+            downPressed = false
+        }
+    });
 
     Events.on(engine, 'beforeUpdate', function(event) {
         var timeScale = (event.delta || (1000 / 60)) / 1000;
 
         if (scaleRate > 0) {
-            Body.scale(bodyF, 1 + (scaleRate * timeScale), 1 + (scaleRate * timeScale));
+            // Body.scale(bodyF, 1 + (scaleRate * timeScale), 1 + (scaleRate * timeScale));
 
             // modify bodyE vertices
             bodyE.vertices[0].x -= 0.2 * timeScale;
@@ -101,12 +170,39 @@ Example.manipulation = function() {
 
         // after first 0.8 sec (simulation time)
         if (engine.timing.timestamp >= 800)
-            Body.setStatic(bodyG, true);
+            Body.setStatic(bodyF, true);
+
+        // build up pressure
+        if(downPressed==true){
+            let pressureRate = 20            
+            releasePressure += timeScale*pressureRate
+        }
+        // shoot up
+        if(downPressed==false && releasePressure>0){
+            
+            Body.setVelocity(bodyG, { x: 0, y: -releasePressure});
+            releasePressure = 0;
+        }
+        
+        if(upPressed==true){
+            Body.setPosition(bodyG, { x: 325, y: -100 }, true);
+            
+            // Body.setVelocity(bodyG, { x: Math.floor(Math.random() * 10)-5, y: Math.floor(Math.random() * 10)-5 });
+            Body.setVelocity(bodyG, { x: 0, y: 0 });
+        }
+
+        if(leftPressed==true){
+            
+            Body.setVelocity(Composite.allBodies(leftFlapper)[0], { x: 10, y: -40 });
+        }
+
+
+        
 
         // every 1.5 sec (simulation time)
         if (engine.timing.timestamp - lastTime >= 1500) {
             Body.setVelocity(bodyB, { x: 0, y: -10 });
-            Body.setAngle(bodyC, -Math.PI * 0.26);
+            // Body.setAngle(bodyC, -Math.PI * 0.26);
             Body.setAngularVelocity(bodyD, 0.2);
 
             // stop scaling
@@ -157,6 +253,24 @@ Example.manipulation.title = 'Manipulation';
 Example.manipulation.for = '>=0.14.2';
 
 Example.manipulation()
+
+// will need to build a render on top of this
+// https://github.com/liabru/matter-js/wiki/Rendering
+// This is where customization can come in
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 if (typeof module !== 'undefined') {
     module.exports = Example.manipulation;
