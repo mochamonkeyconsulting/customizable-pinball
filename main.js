@@ -65,7 +65,7 @@ Example.manipulation = function () {
     // add bodies
     var bodyLeftBase = Bodies.rectangle(200, 600, 200, 100, { isStatic: true, render: { fillStyle: '#060a19' } }),
         bodyRightBase = Bodies.rectangle(600, 600, 200, 100, { isStatic: true, render: { fillStyle: '#060a19' } }),
-        ballyBoi = Bodies.circle(400, 100, 15, { friction: 0, render: { fillStyle: '#060a19' } });
+        ballyBoi = Bodies.circle(400, 100, 15, { friction: 0, restitution:.5, render: { fillStyle: '#060a19' } });
 
 
     Composite.add(world, [ballyBoi]); // bodyLeftBase, bodyRightBase
@@ -89,7 +89,7 @@ Example.manipulation = function () {
         length = 100,
         width = 10;
 
-    var leftFlapper = Composites.stack(150, 500, 1, 1, -20, 0, function (x, y) {
+    var leftFlapper = Composites.stack(200, 500, 1, 1, -20, 0, function (x, y) {
         return Bodies.rectangle(x, y, length, width, {
             collisionFilter: { group: groupLeft },
             frictionAir: 0,
@@ -114,7 +114,7 @@ Example.manipulation = function () {
     }));
     // FLAP_ON
     let leftConstraintOn = Constraint.create({
-        pointA: { x: leftFlapper.bodies[0].position.x + 0, y: leftFlapper.bodies[0].position.y - 100 },
+        pointA: { x: leftFlapper.bodies[0].position.x + 50, y: leftFlapper.bodies[0].position.y - 100 },
         bodyB: leftFlapper.bodies[0],
         pointB: { x: 50, y: 0 },
         stiffness: 0,
@@ -123,7 +123,7 @@ Example.manipulation = function () {
     })
     // FLAP_OFF
     let leftConstraintOff = Constraint.create({
-        pointA: { x: leftFlapper.bodies[0].position.x + 0, y: leftFlapper.bodies[0].position.y + 100 },
+        pointA: { x: leftFlapper.bodies[0].position.x + 50, y: leftFlapper.bodies[0].position.y + 100 },
         bodyB: leftFlapper.bodies[0],
         pointB: { x: 50, y: 0 },
         stiffness: 0,
@@ -186,6 +186,79 @@ Example.manipulation = function () {
     Composite.add(rightFlapper, rightConstraintOff);
     Composite.add(world, rightFlapper);
 
+
+
+
+
+
+    // ENV 
+    
+    // BUMPERS
+    var size = 200,
+        x = 200,
+        y = 200,
+        partA = Bodies.rectangle(x, y, size, size / 5),
+        partB = Bodies.rectangle(x, y, size / 5, size, { render: partA.render });
+
+    var compoundBodyA = Body.create({
+        parts: [partA, partB]
+    });
+
+    size = 100;
+    x = 400;
+    y = -200;
+
+    var partC = Bodies.circle(x, y, 20, { restitution:.1 }),
+        partD = Bodies.circle(x + size, y, 20, { restitution:.3 }),
+        partE = Bodies.circle(x + size, y + size, 20, { restitution:.5 }),
+        partF = Bodies.circle(x, y + size, 20, { restitution:.3 });
+
+    var compoundBodyB = Body.create({
+        parts: [partC, partD, partE, partF]
+    });
+
+    var constraint = Constraint.create({
+        pointA: { x: 400, y: -300 },
+        bodyB: compoundBodyB,
+        pointB: { x: 0, y: 0 }
+    });
+
+    Composite.add(world, [
+        // compoundBodyA, 
+        compoundBodyB, 
+        constraint
+    ]);
+
+
+
+    const BUMPER_SIZE = 100
+    var rightBumper =  Bodies.polygon(500, 300, 5, BUMPER_SIZE, { restitution: .9, isStatic: true, myType: "bumper" });
+
+
+    // an example of using collisionStart event on an engine
+    Events.on(engine, 'collisionStart', function(event) {
+        var pairs = event.pairs;
+
+        // change object colours to show those starting a collision
+        for (var i = 0; i < pairs.length; i++) {
+            var pair = pairs[i];
+            if(pair.bodyA.myType == "bumper"){
+                console.log("BUMPER BUMPED")
+                Body.setVelocity(pair.bodyB, {x:pair.bodyB.velocity.x-10,y: pair.bodyB.velocity.y-10})
+            }
+            if(pair.bodyB.myType == "bumper"){
+                console.log("BUMPER BUMPED")
+                Body.setVelocity(pair.bodyA, {x:pair.bodyA.velocity.x-10,y: pair.bodyA.velocity.y-10})
+            }
+        }
+    });
+
+
+
+
+    Composite.add(world, [
+        rightBumper
+    ]);
 
 
     // UPDATE
@@ -347,6 +420,7 @@ Example.manipulation = function () {
     };
 
 };
+Matter.Resolver._restingThresh = 0.001
 
 Example.manipulation.title = 'Manipulation';
 Example.manipulation.for = '>=0.14.2';
