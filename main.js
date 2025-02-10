@@ -52,7 +52,9 @@ Example.manipulation = function () {
             height: 1200,
             showAxes: true,
             showCollisions: true,
-            showConvexHulls: true
+            showConvexHulls: true,
+            showAngleIndicator: false,
+            wireframes: false
         }
     });
 
@@ -61,11 +63,28 @@ Example.manipulation = function () {
     // create runner
     var runner = Runner.create({ delta: 1000 / 600 });
     Runner.run(runner, engine);
+    
+    function limitVelocity(body, maxVelocity){
+        const { x, y } = body.velocity
+        if(x > maxVelocity){
+            Body.setVelocity(body, {x:maxVelocity, y})
+        }
+        if(x < -maxVelocity){
+            Body.setVelocity(body, {x:-maxVelocity, y})
+        }
+        if(y > maxVelocity){
+            Body.setVelocity(body, {x, y:maxVelocity})
+        }
+        if(y < -maxVelocity){
+            Body.setVelocity(body, {x, y:-maxVelocity})
+        }
+    }
+
 
     // add bodies
     var bodyLeftBase = Bodies.rectangle(200, 600, 200, 100, { isStatic: true, render: { fillStyle: '#060a19' } }),
         bodyRightBase = Bodies.rectangle(600, 600, 200, 100, { isStatic: true, render: { fillStyle: '#060a19' } }),
-        ballyBoi = Bodies.circle(400, 100, 15, { friction: 0, restitution:.5, render: { fillStyle: '#060a19' } });
+        ballyBoi = Bodies.circle(400, 100, 15, { friction: 0, restitution:.5, render: { sprite: { yScale: 1/17, xScale: 1/17, texture: './assets/ball.png'} } });
 
 
     Composite.add(world, [ballyBoi]); // bodyLeftBase, bodyRightBase
@@ -74,11 +93,12 @@ Example.manipulation = function () {
         // walls
         Bodies.rectangle(400, -300, 800, 50, { isStatic: true }), // top
         Bodies.rectangle(400, 800, 800, 50, { angle: .1, isStatic: true }), //bottom
-        Bodies.rectangle(675, 300, 50, 800, { isStatic: true }), // right left
+        Bodies.rectangle(700, 300, 25, 800, { isStatic: true }), // right left
         Bodies.rectangle(800, 300, 50, 1200, { isStatic: true }), //right right
         Bodies.rectangle(0, 300, 50, 1200, { isStatic: true }), //left
-        Bodies.rectangle(50, 100, 50, 800, { angle: -.2, isStatic: true }), //left
-        Bodies.rectangle(725, -230, 50, 200, { angle: -.9, isStatic: true }) // bumper thing at top
+        Bodies.rectangle(100, 200, 50, 800, { angle: -.2, isStatic: true }), //left
+        Bodies.rectangle(725, -230, 50, 200, { angle: -.9, isStatic: true }), // bumper thing at top
+        Bodies.trapezoid(575, 550, 300, 150, .9, { angle: -3.75, isStatic: true })
     ]);
 
 
@@ -89,7 +109,7 @@ Example.manipulation = function () {
         length = 100,
         width = 10;
 
-    var leftFlapper = Composites.stack(200, 500, 1, 1, -20, 0, function (x, y) {
+    var leftFlapper = Composites.stack(200, 600, 1, 1, -20, 0, function (x, y) {
         return Bodies.rectangle(x, y, length, width, {
             collisionFilter: { group: groupLeft },
             frictionAir: 0,
@@ -140,7 +160,7 @@ Example.manipulation = function () {
         length = 100,
         width = 10;
 
-    var rightFlapper = Composites.stack(400, 500, 1, 1, -20, 0, function (x, y) {
+    var rightFlapper = Composites.stack(400, 600, 1, 1, -20, 0, function (x, y) {
         return Bodies.rectangle(x, y, length, width, {
             collisionFilter: { group: groupRight },
             frictionAir: 0,
@@ -231,8 +251,8 @@ Example.manipulation = function () {
 
 
 
-    const BUMPER_SIZE = 100
-    var rightBumper =  Bodies.polygon(500, 300, 5, BUMPER_SIZE, { restitution: .9, isStatic: true, myType: "bumper" });
+    const BUMPER_SIZE = 70
+    var rightBumper =  Bodies.rectangle(450, 475, 150, 60, { angle: -.6, chamfer: { radius: [50, 0, 20, 0] },  restitution: .9, isStatic: true, myType: "bumper" });
 
 
     // an example of using collisionStart event on an engine
@@ -320,6 +340,7 @@ Example.manipulation = function () {
             // Body.setVelocity(ballyBoi, { x: Math.floor(Math.random() * 10)-5, y: Math.floor(Math.random() * 10)-5 });
             Body.setVelocity(ballyBoi, { x: 0, y: 0 });
         }
+        limitVelocity(ballyBoi, 40)
 
         if (leftPressed == true) {
             leftConstraintOn.stiffness = .01
@@ -430,8 +451,6 @@ Example.manipulation()
 // will need to build a render on top of this
 // https://github.com/liabru/matter-js/wiki/Rendering
 // This is where customization can come in
-
-
 
 
 
