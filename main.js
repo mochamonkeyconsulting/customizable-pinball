@@ -54,7 +54,9 @@ Example.manipulation = function () {
             showCollisions: true,
             showConvexHulls: true,
             showAngleIndicator: false,
-            wireframes: false
+            wireframes: false,
+            showStats: true,
+            showPerformance: true
         }
     });
 
@@ -96,7 +98,7 @@ Example.manipulation = function () {
         Bodies.rectangle(700, 300, 25, 800, { isStatic: true }), // right left
         Bodies.rectangle(800, 300, 50, 1200, { isStatic: true }), //right right
         Bodies.rectangle(0, 300, 50, 1200, { isStatic: true }), //left
-        Bodies.rectangle(100, 200, 50, 800, { angle: -.2, isStatic: true }), //left
+        // Bodies.rectangle(100, 200, 50, 800, { angle: -.2, isStatic: true }), //left
         Bodies.rectangle(725, -230, 50, 200, { angle: -.9, isStatic: true }), // bumper thing at top
         Bodies.trapezoid(575, 550, 300, 150, .9, { angle: -3.75, isStatic: true })
     ]);
@@ -252,7 +254,23 @@ Example.manipulation = function () {
 
 
     const BUMPER_SIZE = 70
-    var rightBumper =  Bodies.rectangle(450, 475, 150, 60, { angle: -.6, chamfer: { radius: [50, 0, 20, 0] },  restitution: .9, isStatic: true, myType: "bumper" });
+    var rightBumper =  Bodies.rectangle(450, 475, 150, 60, { angle: -.6, chamfer: { radius: [50, 0, 20, 0] },  restitution: .9, isStatic: true, handler: "bumper", bumperXPush: -5, bumperYPush: -15 });
+    var leftBumper =  Bodies.rectangle(50, 200, 150, 60, { angle: -2.5, chamfer: { radius: [50, 0, 20, 0] },  restitution: .9, isStatic: true, handler: "bumper", bumperXPush: 2, bumperYPush: -10 });
+
+    function collisionStartHandlerBumper(event, pair, i){
+        if(pair.bodyA.handler == "bumper"){
+            console.log("BUMPER BUMPED")
+            Body.setVelocity(pair.bodyB, {x:pair.bodyB.velocity.x+pair.bodyA.bumperXPush,y: pair.bodyB.velocity.y+pair.bodyA.bumperYPush})
+        }
+        if(pair.bodyB.handler == "bumper"){
+            console.log("BUMPER BUMPED")
+            Body.setVelocity(pair.bodyA, {x:pair.bodyA.velocity.x+pair.bodyB.bumperXPush,y: pair.bodyA.velocity.y+pair.bodyB.bumperYPush})
+        }
+    }
+
+    const collisionStartHandlers = {
+        "bumper": collisionStartHandlerBumper
+    }
 
 
     // an example of using collisionStart event on an engine
@@ -262,13 +280,11 @@ Example.manipulation = function () {
         // change object colours to show those starting a collision
         for (var i = 0; i < pairs.length; i++) {
             var pair = pairs[i];
-            if(pair.bodyA.myType == "bumper"){
-                console.log("BUMPER BUMPED")
-                Body.setVelocity(pair.bodyB, {x:pair.bodyB.velocity.x-10,y: pair.bodyB.velocity.y-10})
+            if(pair.bodyA.handler){
+                collisionStartHandlers[pair.bodyA.handler](event, pair, i)
             }
-            if(pair.bodyB.myType == "bumper"){
-                console.log("BUMPER BUMPED")
-                Body.setVelocity(pair.bodyA, {x:pair.bodyA.velocity.x-10,y: pair.bodyA.velocity.y-10})
+            if(pair.bodyB.handler){
+                collisionStartHandlers[pair.bodyB.handler](event, pair, i)
             }
         }
     });
@@ -277,7 +293,7 @@ Example.manipulation = function () {
 
 
     Composite.add(world, [
-        rightBumper
+        rightBumper, leftBumper
     ]);
 
 
