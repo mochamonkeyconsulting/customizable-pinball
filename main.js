@@ -1,3 +1,5 @@
+import {Render} from "./Render.js";
+
 var Example = Example || {};
 
 
@@ -28,7 +30,6 @@ let GAME_STATES = {
 
 Example.manipulation = function () {
     var Engine = Matter.Engine,
-        Render = Matter.Render,
         Runner = Matter.Runner,
         Body = Matter.Body,
         Events = Matter.Events,
@@ -251,7 +252,10 @@ Example.manipulation = function () {
         constraint
     ]);
 
-
+    var score = 0;
+    function addScore(amount){
+        score+=amount
+    }
 
     const BUMPER_SIZE = 70
     var rightBumper =  Bodies.rectangle(450, 475, 150, 60, { angle: -.6, chamfer: { radius: [50, 0, 20, 0] },  restitution: .9, isStatic: true, handler: "bumper", bumperXPush: -5, bumperYPush: -15 });
@@ -261,10 +265,12 @@ Example.manipulation = function () {
         if(pair.bodyA.handler == "bumper"){
             console.log("BUMPER BUMPED")
             Body.setVelocity(pair.bodyB, {x:pair.bodyB.velocity.x+pair.bodyA.bumperXPush,y: pair.bodyB.velocity.y+pair.bodyA.bumperYPush})
+            addScore(1)
         }
         if(pair.bodyB.handler == "bumper"){
             console.log("BUMPER BUMPED")
             Body.setVelocity(pair.bodyA, {x:pair.bodyA.velocity.x+pair.bodyB.bumperXPush,y: pair.bodyA.velocity.y+pair.bodyB.bumperYPush})
+            addScore(1)
         }
     }
 
