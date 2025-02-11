@@ -27,6 +27,10 @@ let GAME_STATES = {
     }
 }
 
+let gameState = {
+    score: 0
+}
+
 
 Example.manipulation = function () {
     var Engine = Matter.Engine,
@@ -48,6 +52,7 @@ Example.manipulation = function () {
     var render = Render.create({
         element: document.body,
         engine: engine,
+        gameState: gameState,
         options: {
             width: 800,
             height: 1200,
@@ -231,10 +236,10 @@ Example.manipulation = function () {
     x = 400;
     y = -200;
 
-    var partC = Bodies.circle(x, y, 20, { restitution:.1 }),
-        partD = Bodies.circle(x + size, y, 20, { restitution:.3 }),
-        partE = Bodies.circle(x + size, y + size, 20, { restitution:.5 }),
-        partF = Bodies.circle(x, y + size, 20, { restitution:.3 });
+    var partC = Bodies.circle(x, y, 20, { restitution:.1, handler: "target" }),
+        partD = Bodies.circle(x + size, y, 20, { restitution:.3, handler: "target" }),
+        partE = Bodies.circle(x + size, y + size, 20, { restitution:.5, handler: "target" }),
+        partF = Bodies.circle(x, y + size, 20, { restitution:.3, handler: "target" });
 
     var compoundBodyB = Body.create({
         parts: [partC, partD, partE, partF]
@@ -254,7 +259,7 @@ Example.manipulation = function () {
 
     var score = 0;
     function addScore(amount){
-        score+=amount
+        gameState.score = gameState.score+amount
     }
 
     const BUMPER_SIZE = 70
@@ -274,8 +279,15 @@ Example.manipulation = function () {
         }
     }
 
+    
+    function collisionStartHandlerTarget(event, pair, i){
+        addScore(5)
+    }
+
+
     const collisionStartHandlers = {
-        "bumper": collisionStartHandlerBumper
+        "bumper": collisionStartHandlerBumper,
+        "target": collisionStartHandlerTarget
     }
 
 

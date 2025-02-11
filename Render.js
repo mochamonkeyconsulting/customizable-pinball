@@ -45,6 +45,7 @@ const initRender = function() {
     Render.create = function(options) {
         var defaults = {
             engine: null,
+            gameState: null,
             element: null,
             canvas: null,
             mouse: null,
@@ -101,6 +102,7 @@ const initRender = function() {
 
         render.mouse = options.mouse;
         render.engine = options.engine;
+        render.gameState = options.gameState;
         render.canvas = render.canvas || _createCanvas(render.options.width, render.options.height);
         render.context = render.canvas.getContext('2d');
         render.textures = {};
@@ -153,6 +155,8 @@ const initRender = function() {
             if (render.options.showPerformance || render.options.showDebug) {
                 Render.performance(render, render.context, time);
             }
+
+            Render.renderGameState(render, render.context)
 
             render.context.setTransform(1, 0, 0, 1, 0, 0);
         })();
@@ -481,6 +485,51 @@ const initRender = function() {
 
         // log the time elapsed computing this update
         timing.lastElapsed = Common.now() - startTime;
+    };
+
+    /**
+     * Renders score about the gameState.
+     * @private
+     * @method stats
+     * @param {render} render
+     * @param {RenderingContext} context
+     * @param {Number} time
+     */
+    Render.renderGameState = function(render, context) {
+        var width = 55,
+            height = 44,
+            x = 500,
+            y = 0;
+        var gameState = render.gameState;
+        var { score } = gameState
+        
+
+        // sections
+        var sections = {
+            'Score': score
+        };
+
+        // background
+        context.fillStyle = '#0e0f19';
+        context.fillRect(x, y, width * 5.5, height);
+
+        context.font = '12px Arial';
+        context.textBaseline = 'top';
+        context.textAlign = 'right';
+
+        // sections
+        for (var key in sections) {
+            var section = sections[key];
+            // label
+            context.fillStyle = '#aaa';
+            context.fillText(key, x + width, y + 8);
+
+            // value
+            context.fillStyle = '#eee';
+            context.fillText(section, x + width, y + 26);
+
+            x += width;
+        }
     };
 
     /**
